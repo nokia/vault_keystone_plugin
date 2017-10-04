@@ -20,4 +20,6 @@ script:
   - go test -run TestMockBackend_impl
   - go test -run TestDomains
   - go test -run TestGroups
+  - go test -run TestRoles
+
 
