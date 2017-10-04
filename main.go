@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	keystonebackend "gitlabe1.ext.net.nokia.com/ava/vault_keystone_plugin/plugin"
+	keystonebackend "github.com/nokia/vault_keystone_plugin/plugin"
 	"github.com/hashicorp/vault/helper/pluginutil"
 	"github.com/hashicorp/vault/logical/plugin"
 )
