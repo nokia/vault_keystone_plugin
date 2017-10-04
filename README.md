@@ -71,6 +71,24 @@ Parameters:
 -  `enabled` (_optional_)
 -  `password` (_optional_)
 
+## keystone/users/*user*/credentials/OS-EC2
+
+CLI write / API POST - generate new EC2-style credentials
+
+Parameters:
+-  `user_id`
+-  `tenant_id`
+
+## keystone/groups
+
+CLI write / API POST
+CLI read / API GET - generate new group
+
+Parameters:
+-  `name`
+-  `description` (_optional_)
+-  `domain_id` (_optional_)
+
 ## keystone/projects
 
 CLI write / API POST
@@ -141,7 +159,6 @@ Parameters:
 
 ### TODO:
 
-- Keystone EC2 Extensions
 - Credentials
 - Groups
 - Policies

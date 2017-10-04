@@ -7,6 +7,16 @@ import (
 	"reflect"
 )
 
+type UserEC2response struct {
+	Credential *Credential
+}
+
+type Credential struct {
+	Access string
+	Secret string
+}
+
+
 type Create_reponse_struct_user struct {
 	User *User
 }
@@ -23,6 +33,35 @@ type LinksUser struct {
 	Self string
 }
 
+func UserEC2(user_id string, tenant_id string, token string, keystone_url string) ([]string, error) {
+	var create_reponse UserEC2response
+
+	request := gorequest.New()
+	var body2 string
+	var errs []error
+	_, body2, errs = request.Post("http://"+keystone_url+"/v3/users/"+user_id+"/credentials/OS-EC2").
+		Set("X-Auth-Token", token).
+		Set("Content-type", "application/json").
+		Send(`{"tenant_id":"`+tenant_id+`"}`).End()
+
+		if errs != nil {
+			return nil, fmt.Errorf("generation of EC2 credentials has failed")
+		}
+
+		data := &UserEC2response{
+			Credential: &Credential{},
+		}
+		errmarshal := json.Unmarshal([]byte(body2), data)
+
+		if errmarshal != nil {
+			return nil, errmarshal
+		}
+
+		reflect.TypeOf(create_reponse)
+		reply := []string{string(data.Credential.Access), string(data.Credential.Secret)}
+		return reply, nil
+
+}
 
 func CreateUser(default_project_id string, name string, password string, enabled bool, token string, domain_id string, keystone_url string) ([]string, error) {
 	var create_reponse Create_reponse_struct_user
