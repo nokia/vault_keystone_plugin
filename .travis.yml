@@ -1,0 +1,23 @@
+language: go
+
+matrix:
+  include:
+    - go: 1.9
+
+services:
+  - docker
+
+before_install:
+  - go get github.com/parnurzeal/gorequest
+  - go get github.com/hashicorp/vault/plugins
+  - go get github.com/hashicorp/go-plugin
+  - go get github.com/fatih/structs
+  - go get github.com/google/gofuzz
+  - go get github.com/nokia/vault_keystone_plugin
+  - docker run -d -p 35357:35357 -p 5000:5000 garland/docker-openstack-keystone
+
+script:
+  - go test -run TestMockBackend_impl
+  - go test -run TestDomains
+  - go test -run TestGroups
+

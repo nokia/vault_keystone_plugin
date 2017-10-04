@@ -43,8 +43,7 @@ func TestUsers(t *testing.T) {
         if ec2err != nil {
 	        return
 	}
-	assert.Equal(t, ec2[0], "")
-        assert.NotEqual(t, ec2[1], "")
+        assert.NotEqual(t, ec2[0], "")
 
 	del, err3 := DeleteUser(usr[1], token, keystone_url)
 	assert.Equal(t, del, "ok")
