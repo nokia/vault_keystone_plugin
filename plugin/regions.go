@@ -2,7 +2,6 @@ package keystoneauth
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 
 	"github.com/parnurzeal/gorequest"
@@ -46,7 +45,7 @@ func CreateRegion(id string, description string, parentRegionID string, keystone
 		End()
 
 	if errs != nil {
-		return nil, fmt.Errorf("Failed to create a region")
+		return []string{"", ""}, errs[0]
 	}
 
 	data := &CreateResponsStructRegion{

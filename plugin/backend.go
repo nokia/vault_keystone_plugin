@@ -51,6 +51,8 @@ func Backend() *backend {
 			pathListDomains(&b),
 			pathProjects(&b),
 			pathListProjects(&b),
+			pathRegions(&b),
+			pathListRegions(&b),
 		},
 		PathsSpecial: &logical.Paths{
 			Unauthenticated: []string{
