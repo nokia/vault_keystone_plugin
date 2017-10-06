@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateRegion(t *testing.T) {
+func TestRegions(t *testing.T) {
 
 	f := fuzz.New()
 	var id, description, parentRegionID string
@@ -26,4 +26,8 @@ func TestCreateRegion(t *testing.T) {
 
 	assert.Equal(t, region[0], id)
 	assert.Equal(t, err, nil)
+
+	del, err2 := DeleteRegion(region[0], token, keystoneURL)
+	assert.Equal(t, del, "ok")
+	assert.Equal(t, err2, nil)
 }

@@ -45,8 +45,6 @@ func CreateRegion(id string, description string, parentRegionID string, keystone
 		Send(templateMap).
 		End()
 
-	fmt.Println(string(body))
-
 	if errs != nil {
 		return nil, fmt.Errorf("Failed to create a region")
 	}
@@ -67,4 +65,21 @@ func CreateRegion(id string, description string, parentRegionID string, keystone
 	reply := []string{string(data.Region.ID), string(data.Region.Description)}
 
 	return reply, nil
+}
+
+func DeleteRegion(regionID string, token string, keystoneURL string) (string, error) {
+
+	req := gorequest.New()
+	var errs []error
+
+	_, _, errs = req.
+		Delete("http://"+keystoneURL+"/v3/regions/"+regionID).
+		Set("X-Auth-Token", token).
+		Set("Content-type", "application/json").End()
+
+	if errs != nil {
+		return "", errs[0]
+	}
+
+	return "ok", nil
 }
