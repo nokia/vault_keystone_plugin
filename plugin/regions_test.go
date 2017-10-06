@@ -1,7 +1,6 @@
 package keystoneauth
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/gofuzz"
@@ -19,11 +18,6 @@ func TestRegions(t *testing.T) {
 	keystoneURL := "localhost:35357"
 
 	region, err := CreateRegion(id, description, parentRegionID, keystoneURL, token)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	assert.Equal(t, region[0], id)
 	assert.Equal(t, err, nil)
 
