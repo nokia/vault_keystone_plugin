@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	keystonebackend "github.com/nokia/vault_keystone_plugin/plugin"
 	"github.com/hashicorp/vault/helper/pluginutil"
 	"github.com/hashicorp/vault/logical/plugin"
+	keystonebackend "github.com/nokia/vault_keystone_plugin/plugin"
 )
 
 func main() {
