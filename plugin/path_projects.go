@@ -2,6 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -11,7 +12,7 @@ func pathListProjects(b *backend) *framework.Path {
 		Pattern: "projects/?$",
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ListOperation: b.pathUserList,
+			logical.ListOperation: b.pathProjectList,
 		},
 	}
 }
@@ -106,7 +107,7 @@ func (b *backend) pathProjectRead(
 		return nil, fmt.Errorf("creation of the project failed")
 	}
 
- 	created_project_id := created_project[1]
+	created_project_id := created_project[1]
 
 	return &logical.Response{
 		Data: map[string]interface{}{
@@ -116,7 +117,7 @@ func (b *backend) pathProjectRead(
 			"description": project.Project_description,
 			"enabled":     project.Project_enabled,
 			"parent_id":   project.Project_parent_id,
-			"id":					 created_project_id,
+			"id":          created_project_id,
 		},
 	}, nil
 }
@@ -164,8 +165,8 @@ func (b *backend) pathProjectWrite(
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"name":               name,
-			"created":						true,
+			"name":    name,
+			"created": true,
 		},
 	}, nil
 }
