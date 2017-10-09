@@ -53,6 +53,30 @@ func pathUsers(b *backend) *framework.Path {
 	}
 }
 
+func pathUsersEC2(b *backend) *framework.Path {
+	return &framework.Path{
+		Pattern: "users/" + framework.GenericNameRegex("name")+"/credentials/OS-EC2",
+		Fields: map[string]*framework.FieldSchema{
+			"name": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "name",
+			},
+			"user_id": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "user_id",
+			},
+			"tenant_id": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "tenant_id",
+				Default:     "",
+			},
+		},
+		Callbacks: map[logical.Operation]framework.OperationFunc{
+			logical.UpdateOperation: b.pathUserEC2Write,
+		},
+	}
+}
+
 func (b *backend) User(s logical.Storage, n string) (*userEntry, error) {
 	entry, err := s.Get("user/" + n)
 	if err != nil {
@@ -166,6 +190,41 @@ func (b *backend) pathUserWrite(
 		Data: map[string]interface{}{
 			"name":               name,
 			"created":						true,
+		},
+	}, nil
+}
+
+func (b *backend) pathUserEC2Write(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+
+	id := data.Get("user_id").(string)
+	tenant_id := data.Get("tenant_id").(string)
+
+	conf, err := getconfig(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	keystone_url := conf[0]
+	token := conf[1]
+
+
+	// make a request to Keystone
+
+	usrec2, errusrec2 := UserEC2(id, tenant_id, token, keystone_url)
+
+	if errusrec2 != nil {
+		return nil, errusrec2
+	}
+
+	access_key := usrec2[0]
+	secret_key := usrec2[1]
+
+	return &logical.Response{
+		Data: map[string]interface{}{
+			"access_key": access_key,
+			"secret_key": secret_key,
 		},
 	}, nil
 }

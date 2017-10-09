@@ -291,9 +291,9 @@ func (b *backend) pathRolesGroupOnProjectWrite(
 func (b *backend) pathRolesUserOnDomainWrite(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
-	domain_id := data.Get("domain_id").(string)
-	user_id := data.Get("user_id").(string)
-	role_id := data.Get("role_id").(string)
+	domain_id := data.Get("domain").(string)
+	user_id := data.Get("user").(string)
+	role_id := data.Get("role").(string)
 
 	reflect.TypeOf(domain_id)
 	reflect.TypeOf(user_id)
@@ -328,9 +328,9 @@ func (b *backend) pathRolesUserOnDomainWrite(
 func (b *backend) pathRolesUserOnProjectWrite(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
-	project_id := data.Get("project_id").(string)
-	user_id := data.Get("user_id").(string)
-	role_id := data.Get("role_id").(string)
+	project_id := data.Get("project").(string)
+	user_id := data.Get("user").(string)
+	role_id := data.Get("role").(string)
 
 	reflect.TypeOf(project_id)
 	reflect.TypeOf(user_id)
