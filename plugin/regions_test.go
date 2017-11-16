@@ -12,7 +12,7 @@ func TestRegions(t *testing.T) {
 	f := fuzz.New()
 	var id, description, parentRegionID string
 	f.Fuzz(&id)
-	//f.Fuzz(&parentRegionID)
+	f.Fuzz(&parentRegionID)
 	f.Fuzz(&description)
 	token := "f5cccfb912a8f814189a"
 	keystoneURL := "localhost:35357"
