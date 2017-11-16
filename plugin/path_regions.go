@@ -122,10 +122,6 @@ func (b *backend) pathRegionWrite(
 	if err != nil {
 		return nil, err
 	}
-
-	if err != nil {
-		return nil, err
-	}
 	if err := req.Storage.Put(entry); err != nil {
 		return nil, err
 	}
