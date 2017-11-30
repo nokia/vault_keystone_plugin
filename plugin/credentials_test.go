@@ -1,51 +1,51 @@
 package keystoneauth
 
 import (
-	"github.com/stretchr/testify/assert"
 	"github.com/google/gofuzz"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestUsers(t *testing.T) {
-
+func TestCredentials(t *testing.T) {
 
 	f := fuzz.New()
+	var user_id string
+	var password string
 	var username string
-	var projectname string
 	var description string
 	var default_project_id string
-	var password string
 	f.Fuzz(&username)
-	f.Fuzz(&projectname)
 	f.Fuzz(&description)
 	f.Fuzz(&default_project_id)
 	f.Fuzz(&password)
+
+	var projectname string
+	var domain_id string
+	f.Fuzz(&projectname)
+	f.Fuzz(&domain_id)
+
+	enabled := true
+	is_domain := false
+	thetype := "ec2"
+	blob := "{\"access\":\"181920\",\"secret\":\"secretKey\"}"
 	token := "7a04a385b907caca141f"
 	keystone_url := "localhost:35357"
-	enabled := true
-	is_domain := true
 
 	dom, err := CreateDomain(username, description, enabled, token, keystone_url)
 	if err != nil {
 		return
 	}
-	domain_id := dom[1]
+	domain_id = dom[1]
 	usr, err2 := CreateUser(default_project_id, username, password, enabled, token, domain_id, keystone_url)
 	assert.Equal(t, usr[0], username)
-	assert.Equal(t, err2, nil)
 
-    ten, err := CreateProject(projectname, description, domain_id, enabled, is_domain, token, keystone_url)
+	ten, err := CreateProject(projectname, description, domain_id, enabled, is_domain, token, keystone_url)
 	assert.Equal(t, ten[0], projectname)
-	assert.Equal(t, err, nil)
 
-
-	ec2, ec2err := UserEC2(usr[1], ten[1], token, keystone_url)
-        if ec2err != nil {
-	        return
-	}
-        assert.NotEqual(t, ec2[0], "")
-
-	del, err3 := DeleteUser(usr[1], token, keystone_url)
+	cre, err2 := CreateCredential(blob, thetype, usr[1], ten[1], token, keystone_url)
+	assert.Equal(t, cre[1], user_id)
+	assert.Equal(t, err2, nil)
+	del, err3 := DeleteCredential(cre[0], token, keystone_url)
 	assert.Equal(t, del, "ok")
 	assert.Equal(t, err3, nil)
 
