@@ -10,7 +10,6 @@ import (
 func pathListUsers(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "users/?$",
-
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.ListOperation: b.pathUserList,
 		},
@@ -201,10 +200,6 @@ func (b *backend) pathUserWrite(
 		User_enabled:            enabled,
 		User_password:           password,
 	})
-
-	if err != nil {
-		return nil, err
-	}
 
 	if err != nil {
 		return nil, err
