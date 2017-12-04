@@ -10,7 +10,6 @@ import (
 func pathListUsers(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "users/?$",
-
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.ListOperation: b.pathUserList,
 		},
@@ -45,10 +44,16 @@ func pathUsers(b *backend) *framework.Path {
 				Description: "password",
 				Default:     "",
 			},
+			"user_id": &framework.FieldSchema{
+				Type:					framework.TypeString,
+				Description:	"user_id",
+				Default:			"",
+			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.UpdateOperation: b.pathUserWrite,
 			logical.ReadOperation:   b.pathUserRead,
+			logical.DeleteOperation: b.pathUserDelete,
 		},
 	}
 }
@@ -76,6 +81,27 @@ func pathUsersEC2(b *backend) *framework.Path {
 		},
 	}
 }
+
+func pathUsersDelete(b *backend) *framework.Path {
+	return &framework.Path{
+		Pattern: "users/" + framework.GenericNameRegex("name")+ "/id/" + framework.GenericNameRegex("user_id"),
+		Fields: map[string]*framework.FieldSchema{
+			"name": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "name",
+			},
+			"user_id": &framework.FieldSchema{
+				Type:					framework.TypeString,
+				Description:	"user_id",
+				Default:			"",
+			},
+		},
+		Callbacks: map[logical.Operation]framework.OperationFunc{
+			logical.DeleteOperation: b.pathUserDelete,
+		},
+	}
+}
+
 
 func (b *backend) User(s logical.Storage, n string) (*userEntry, error) {
 	entry, err := s.Get("user/" + n)
@@ -178,10 +204,6 @@ func (b *backend) pathUserWrite(
 	if err != nil {
 		return nil, err
 	}
-
-	if err != nil {
-		return nil, err
-	}
 	if err := req.Storage.Put(entry); err != nil {
 		return nil, err
 	}
@@ -190,6 +212,33 @@ func (b *backend) pathUserWrite(
 		Data: map[string]interface{}{
 			"name":               name,
 			"created":						true,
+		},
+	}, nil
+}
+
+func (b *backend) pathUserDelete(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+
+	name := data.Get("name").(string)
+	user_id := data.Get("user_id").(string)
+
+	conf, err := getconfig(req)
+	if err != nil {
+		return nil, err
+	}
+	keystone_url := conf[0]
+	token := conf[1]
+
+	_, err_user_delete := DeleteUser(user_id, token, keystone_url)
+	if err_user_delete != nil {
+		return nil, err_user_delete
+	}
+
+	return &logical.Response{
+		Data: map[string]interface{}{
+			"name":			name,
+			"deleted": 	true,
+			"user_id":	user_id,
 		},
 	}, nil
 }

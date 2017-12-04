@@ -107,18 +107,19 @@ func CreateUser(default_project_id string, name string, password string, enabled
 func DeleteUser(user_id string, token string, keystone_url string) (string, error) {
 	request := gorequest.New()
 	var errs3 []error
+	var status string
 
-	_, _, errs3 = request.Delete("http://"+keystone_url+"/v3/users/"+user_id).
+	_, status, errs3 = request.Delete("http://"+keystone_url+"/v3/users/"+user_id).
 		Set("X-Auth-Token", token).
 		Set("Content-type", "application/json").End()
 
-	if errs3 == nil {
-		return "ok", nil
-	}
-
 	if errs3 != nil {
-		return "", errs3[0]
+		return status, errs3[0]
 	}
 
-	return "ok", nil
+	if errs3 == nil {
+		return status, nil
+	}
+
+	return status, nil
 }
