@@ -53,7 +53,7 @@ $ vault mount -path=keystone -plugin-name=vault_keystone_plugin plugin
 ```
 - API
 ```shell
-$ curl -X PUT VAULT_URL/sys/plugins/catalog/keystone -d '{"sha_256" : "<SHA_256>"", "command" : "keystone"}' \
+$ curl -X PUT VAULT_URL/sys/plugins/catalog/keystone -d '{"sha_256" : "<SHA_256>", "command" : "keystone"}' \
 -H 'content-type: application/json' -H "x-vault-token : <VAULT_TOKEN>"
 $ curl -X POST VAULT_URL/sys/mounts/keystone \
 -d '{"type": "plugin","plugin_name" : "keystone","config": {"default_lease_ttl": 0,"max_lease_ttl": 0,"force_no_cache": false}}' \
