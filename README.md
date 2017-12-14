@@ -15,6 +15,7 @@ Otherwise, first read this guide on how to [get started with Vault](https://www.
 To learn specifically about how plugins work, see documentation on [Vault plugins](https://www.vaultproject.io/docs/internals/plugins.html).
 
 ### Build
+- manually
 ```shell
 go get github.com/parnurzeal/gorequest
 go get github.com/hashicorp/vault/plugins
@@ -23,6 +24,12 @@ go get github.com/fatih/structs
 go get github.com/google/gofuzz
 go build -o vault_keystone_plugin .
 ```
+
+- using build.sh
+```shell
+$ ./build.sh
+```
+Plugin binary will be builded in `bin` directory
 
 ### Installation
 
