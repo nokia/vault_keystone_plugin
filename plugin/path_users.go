@@ -53,7 +53,6 @@ func pathUsers(b *backend) *framework.Path {
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.UpdateOperation: b.pathUserWrite,
 			logical.ReadOperation:   b.pathUserRead,
-			logical.DeleteOperation: b.pathUserDelete,
 		},
 	}
 }
@@ -146,7 +145,7 @@ func (b *backend) pathUserRead(
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
 	}
 
-	name = fmt.Sprintf("%s_%s_%s ","vault", name, namepostfix[4:20])
+	name = fmt.Sprintf("%s_%s_%s","vault", name, namepostfix[4:20])
 	password, _ = credsutil.RandomAlphaNumeric(44, true)
 	password = password[4:44]
 	keystone_url := conf[0]
