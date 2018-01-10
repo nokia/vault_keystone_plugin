@@ -1,10 +1,13 @@
 package keystoneauth
 
 import (
-	"fmt"
 	"encoding/json"
-	"github.com/parnurzeal/gorequest"
+	"fmt"
+	"log"
 	"reflect"
+	"regexp"
+
+	"github.com/parnurzeal/gorequest"
 )
 
 type UserEC2response struct {
@@ -15,7 +18,6 @@ type Credential struct {
 	Access string
 	Secret string
 }
-
 
 type Create_reponse_struct_user struct {
 	User *User
@@ -31,6 +33,13 @@ type User struct {
 
 type LinksUser struct {
 	Self string
+}
+
+type UsersResponse struct {
+  User []struct {
+    Id		string	`json:"id"`
+    Name 	string	`json:"name"`
+  } `json:"users"`
 }
 
 func UserEC2(user_id string, tenant_id string, token string, keystone_url string) ([]string, error) {
@@ -102,6 +111,54 @@ func CreateUser(default_project_id string, name string, password string, enabled
 	reflect.TypeOf(create_reponse)
 	reply := []string{string(data.User.Name), string(data.User.Id)}
 	return reply, nil
+}
+
+func ListAllOpenStackUsers(
+	name string, token string, keystone_url string) (map[string]string, error) {
+
+		var data string
+		var err []error
+		to_delete_users := make (map[string]string)
+
+		request := gorequest.New()
+		_, data, err = request.Get("http://" + keystone_url + "/v3/users/").
+		Set("X-Auth-Token", token).
+		Set("Content-type", "application/json").End()
+		if err != nil {
+			log.Println(err[0])
+		}
+
+	  user_struct := new(UsersResponse)
+	  err2 := json.Unmarshal([]byte(data), &user_struct)
+	  if err2 != nil {
+	    log.Fatal(err2)
+	  }
+
+		if len(name) > 0 {
+
+			reg_exp := "vault_" + name + "_[a-z0-9]{16}"
+
+		  for i, u := range user_struct.User {
+		    fmt.Sprintf("%d. %s, %s\n", i, u.Id, u.Name)
+		    match, err := regexp.MatchString(reg_exp, u.Name)
+
+				if err != nil {
+					return nil, fmt.Errorf("Matching error: %s", err)
+				}
+
+				if match {
+		      to_delete_users[u.Id] = u.Name
+		    }
+		  }
+		} else {
+			return nil, fmt.Errorf("User Name must be at least one character long")
+		}
+
+	if len(to_delete_users) == 0 {
+		return nil, fmt.Errorf("unknown user: %s", name)
+	}
+
+	return to_delete_users, nil
 }
 
 func DeleteUser(user_id string, token string, keystone_url string) (string, error) {

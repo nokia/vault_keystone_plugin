@@ -9,7 +9,10 @@ import (
 	keystonebackend "github.com/nokia/vault_keystone_plugin/plugin"
 )
 
+
 func main() {
+
+	plugin_version := "0.2.1"
 
 	apiClientMeta := &pluginutil.APIClientMeta{}
 	flags := apiClientMeta.FlagSet()
@@ -26,4 +29,7 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
+
+	log.Printf("Plugin Version: %s", plugin_version)
+
 }

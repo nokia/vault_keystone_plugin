@@ -2,6 +2,8 @@ package keystoneauth
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"github.com/hashicorp/vault/plugins/helper/database/credsutil"
@@ -53,6 +55,7 @@ func pathUsers(b *backend) *framework.Path {
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.UpdateOperation: b.pathUserWrite,
 			logical.ReadOperation:   b.pathUserRead,
+			logical.DeleteOperation: b.pathUserDelete,
 		},
 	}
 }
@@ -80,27 +83,6 @@ func pathUsersEC2(b *backend) *framework.Path {
 		},
 	}
 }
-
-func pathUsersDelete(b *backend) *framework.Path {
-	return &framework.Path{
-		Pattern: "users/" + framework.GenericNameRegex("name")+ "/id/" + framework.GenericNameRegex("user_id"),
-		Fields: map[string]*framework.FieldSchema{
-			"name": &framework.FieldSchema{
-				Type:        framework.TypeString,
-				Description: "name",
-			},
-			"user_id": &framework.FieldSchema{
-				Type:					framework.TypeString,
-				Description:	"user_id",
-				Default:			"",
-			},
-		},
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.DeleteOperation: b.pathUserDelete,
-		},
-	}
-}
-
 
 func (b *backend) User(s logical.Storage, n string) (*userEntry, error) {
 	entry, err := s.Get("user/" + n)
@@ -218,9 +200,6 @@ func (b *backend) pathUserWrite(
 func (b *backend) pathUserDelete(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
-	name := data.Get("name").(string)
-	user_id := data.Get("user_id").(string)
-
 	conf, err := getconfig(req)
 	if err != nil {
 		return nil, err
@@ -228,18 +207,49 @@ func (b *backend) pathUserDelete(
 	keystone_url := conf[0]
 	token := conf[1]
 
-	_, err_user_delete := DeleteUser(user_id, token, keystone_url)
-	if err_user_delete != nil {
-		return nil, err_user_delete
+	name := data.Get("name").(string)
+	var deleted_array []bool
+	var deleted_entity bool
+	
+ 	x, err := ListAllOpenStackUsers(name, token, keystone_url)
+	if err != nil {
+		return logical.ErrorResponse(fmt.Sprintf("Error: %s", err)), nil
+	}
+
+	for k, v := range x {
+		log.Printf("[%s]=%s", k, v)
+		status, err := DeleteUser(k, token, keystone_url)
+		if err != nil {
+			fmt.Printf("Error while deleting user")
+		}
+		if status == "" {
+			deleted_entity = true
+		} else {
+			deleted_entity = false
+		}
+		deleted_array = append(deleted_array, deleted_entity)
+	}
+
+	for key := range deleted_array {
+		if deleted_array[key] == false {
+				return logical.ErrorResponse(fmt.Sprintf("unknown user: %s", name)), nil
+				break
+			}
+	}
+
+	err_storage := req.Storage.Delete("user/" + name)
+	if err_storage != nil {
+		return logical.ErrorResponse(
+			fmt.Sprintf("User not deleted from vault: %s", err_storage)), nil
 	}
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"name":			name,
-			"deleted": 	true,
-			"user_id":	user_id,
+			"name": name,
+			"deleted": true,
 		},
 	}, nil
+
 }
 
 func (b *backend) pathUserEC2Write(
@@ -283,4 +293,5 @@ type userEntry struct {
 	User_domain_id          string `json:"domain_id" structs:"domain_id" mapstructure:"domain_id"`
 	User_enabled            bool   `json:"enabled" structs:"enabled" mapstructure:"enabled"`
 	User_password           string `json:"password" structs:"password" mapstructure:"password"`
+	User_id 								string `json:"id" structs:"id" mapstructure:"id"`
 }
