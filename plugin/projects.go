@@ -2,8 +2,11 @@ package keystoneauth
 
 import (
 	"encoding/json"
-	"github.com/parnurzeal/gorequest"
+	"fmt"
+	"log"
 	"reflect"
+
+	"github.com/parnurzeal/gorequest"
 )
 
 type Create_reponse_struct_project struct {
@@ -22,6 +25,13 @@ type Project struct {
 
 type LinksProject struct {
 	Self string
+}
+
+type ProjectResponse struct {
+	Project []struct {
+		Name 	string	`json:"name"`
+		Id		string	`json:"id"`
+	} `json:"projects"`
 }
 
 
@@ -75,17 +85,49 @@ func CreateProject(name string, description string, domain_id string, enabled bo
 	return reply, nil
 }
 
-func DeleteProject(project_id string, token string, keystone_url string) (string, error) {
+func DeleteProject(
+	keystone_url string, token string, name string) (string, error) {
+
+	var data string
+	var err []error
+	var status string
+	// var to_delete_project string
 
 	request := gorequest.New()
-	var err []error
+	_, data, err = request.Get("http://" + keystone_url + "/v3/projects/").
+	Set("X-Auth-Token", token).
+	Set("Content-type", "application/json").End()
+	if err != nil {
+		log.Println(err[0])
+	}
 
-	_, _, err = request.Delete("http://"+keystone_url+"/v3/projects/"+project_id).
+	project_struct := new(ProjectResponse)
+	err2 := json.Unmarshal([]byte(data), &project_struct)
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	var project_id string
+	for i, p := range project_struct.Project {
+		if p.Name == name {
+			fmt.Sprintf("%s, %s", i, p.Id, p.Name)
+			project_id = p.Id
+			break
+		}
+	}
+
+	if project_id == "" {
+		return "NO_PROJECT", nil
+	}
+
+	request_del := gorequest.New()
+	_, status, err = request_del.
+		Delete("http://"+keystone_url+"/v3/projects/"+project_id).
 		Set("X-Auth-Token", token).
 		Set("Content-type", "application/json").End()
 
 	if err != nil {
 		return "",err[0]
 	}
-	return "ok",nil
+	return status, nil
 }

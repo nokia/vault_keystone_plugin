@@ -9,10 +9,9 @@ import (
 	keystonebackend "github.com/nokia/vault_keystone_plugin/plugin"
 )
 
-
 func main() {
 
-	plugin_version := "0.2.1"
+	plugin_version := "0.2.2"
 
 	apiClientMeta := &pluginutil.APIClientMeta{}
 	flags := apiClientMeta.FlagSet()
