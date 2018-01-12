@@ -210,37 +210,60 @@ func (b *backend) pathUserDelete(
 	name := data.Get("name").(string)
 	var deleted_array []bool
 	var deleted_entity bool
-	
- 	x, err := ListAllOpenStackUsers(name, token, keystone_url)
+
+  // Check if user exist in Storage
+	user, err := req.Storage.Get("user/" + name)
 	if err != nil {
-		return logical.ErrorResponse(fmt.Sprintf("Error: %s", err)), nil
+		return nil, err
 	}
 
-	for k, v := range x {
-		log.Printf("[%s]=%s", k, v)
-		status, err := DeleteUser(k, token, keystone_url)
-		if err != nil {
-			fmt.Printf("Error while deleting user")
-		}
-		if status == "" {
-			deleted_entity = true
-		} else {
-			deleted_entity = false
-		}
-		deleted_array = append(deleted_array, deleted_entity)
-	}
+	if user != nil {
+		x, err := ListAllOpenStackUsers(name, token, keystone_url)
 
-	for key := range deleted_array {
-		if deleted_array[key] == false {
-				return logical.ErrorResponse(fmt.Sprintf("unknown user: %s", name)), nil
-				break
+    // User deleted from OpenStack but exists in Storage
+		if v, present := x["NO_OS_USER"]; present {
+			fmt.Sprintf("%v", v)
+			err_storage := req.Storage.Delete("user/" + name)
+			if err_storage != nil {
+				return logical.ErrorResponse(
+					fmt.Sprintf("User not deleted from vault: %s", err_storage)), nil
 			}
-	}
+		} else {
+			if err != nil {
+				return logical.ErrorResponse(fmt.Sprintf("Error: %s", err)), nil
+			}
 
-	err_storage := req.Storage.Delete("user/" + name)
-	if err_storage != nil {
-		return logical.ErrorResponse(
-			fmt.Sprintf("User not deleted from vault: %s", err_storage)), nil
+			for k, v := range x {
+				log.Printf("[%s]=%s", k, v)
+				status, err := DeleteUser(k, token, keystone_url)
+				if err != nil {
+					fmt.Printf("Error while deleting user")
+				}
+				if status == "" {
+					deleted_entity = true
+				} else {
+					deleted_entity = false
+				}
+				deleted_array = append(deleted_array, deleted_entity)
+			}
+
+			for key := range deleted_array {
+				if deleted_array[key] == false {
+						return logical.ErrorResponse(
+							fmt.Sprintf("unknown user: %s", name)), nil
+						break
+					}
+			}
+
+			err_storage := req.Storage.Delete("user/" + name)
+			if err_storage != nil {
+				return logical.ErrorResponse(
+					fmt.Sprintf("User not deleted from vault: %s", err_storage)), nil
+			}
+		}
+
+	} else {
+		return logical.ErrorResponse(fmt.Sprintf("unknown user: %s", name)), nil
 	}
 
 	return &logical.Response{

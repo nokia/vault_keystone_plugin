@@ -155,7 +155,9 @@ func ListAllOpenStackUsers(
 		}
 
 	if len(to_delete_users) == 0 {
-		return nil, fmt.Errorf("unknown user: %s", name)
+		// return nil, fmt.Errorf("unknown user: %s", name)
+		to_delete_users["NO_OS_USER"] = "NO_OS_USER"
+		return to_delete_users, nil
 	}
 
 	return to_delete_users, nil

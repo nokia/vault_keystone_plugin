@@ -117,7 +117,7 @@ func DeleteProject(
 	}
 
 	if project_id == "" {
-		return "NO_PROJECT", nil
+		return "NO_OS_PROJECT", nil
 	}
 
 	request_del := gorequest.New()

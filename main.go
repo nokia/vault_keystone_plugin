@@ -11,7 +11,7 @@ import (
 
 func main() {
 
-	plugin_version := "0.2.2"
+	plugin_version := "0.2.3"
 
 	apiClientMeta := &pluginutil.APIClientMeta{}
 	flags := apiClientMeta.FlagSet()
