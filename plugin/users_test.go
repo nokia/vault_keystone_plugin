@@ -15,11 +15,13 @@ func TestUsers(t *testing.T) {
 	var description string
 	var default_project_id string
 	var password string
+
 	f.Fuzz(&username)
 	f.Fuzz(&projectname)
 	f.Fuzz(&description)
 	f.Fuzz(&default_project_id)
 	f.Fuzz(&password)
+
 	token := "7a04a385b907caca141f"
 	keystone_url := "localhost:35357"
 	enabled := true
@@ -40,13 +42,13 @@ func TestUsers(t *testing.T) {
 
 
 	ec2, ec2err := UserEC2(usr[1], ten[1], token, keystone_url)
-        if ec2err != nil {
-	        return
+	if ec2err != nil {
+	  return
 	}
-        assert.NotEqual(t, ec2[0], "")
+  assert.NotEqual(t, ec2[0], "")
 
 	del, err3 := DeleteUser(usr[1], token, keystone_url)
-	assert.Equal(t, del, "ok")
+	assert.Equal(t, del, "")
 	assert.Equal(t, err3, nil)
 
 }
