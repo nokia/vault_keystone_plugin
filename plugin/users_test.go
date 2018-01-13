@@ -36,7 +36,7 @@ func TestUsers(t *testing.T) {
 	assert.Equal(t, usr[0], username)
 	assert.Equal(t, err2, nil)
 
-  ten, err := CreateProject(projectname, description, domain_id, enabled, is_domain, token, keystone_url)
+    ten, err := CreateProject(projectname, description, domain_id, enabled, is_domain, token, keystone_url)
 	assert.Equal(t, ten[0], projectname)
 	assert.Equal(t, err, nil)
 
