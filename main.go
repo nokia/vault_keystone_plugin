@@ -11,6 +11,8 @@ import (
 
 func main() {
 
+	plugin_version := "0.2.3"
+
 	apiClientMeta := &pluginutil.APIClientMeta{}
 	flags := apiClientMeta.FlagSet()
 	flags.Parse(os.Args)
@@ -26,4 +28,7 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
+
+	log.Printf("Plugin Version: %s", plugin_version)
+
 }

@@ -55,6 +55,8 @@ func Backend() *backend {
 			pathListDomains(&b),
 			pathProjects(&b),
 			pathListProjects(&b),
+			pathRegions(&b),
+			pathListRegions(&b),
 			pathGroups(&b),
 			pathListGroups(&b),
 			pathCredentials(&b),

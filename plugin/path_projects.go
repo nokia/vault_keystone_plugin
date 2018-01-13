@@ -52,8 +52,9 @@ func pathProjects(b *backend) *framework.Path {
 			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: b.pathProjectWrite,
-			logical.ReadOperation:   b.pathProjectRead,
+			logical.UpdateOperation: 	b.pathProjectWrite,
+			logical.ReadOperation:   	b.pathProjectRead,
+			logical.DeleteOperation:	b.pathProjectDelete,
 		},
 	}
 }
@@ -167,6 +168,56 @@ func (b *backend) pathProjectWrite(
 		Data: map[string]interface{}{
 			"name":    name,
 			"created": true,
+		},
+	}, nil
+}
+
+func (b *backend) pathProjectDelete(
+	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+
+	name := data.Get("name").(string)
+
+	project, err := req.Storage.Get("project/"+name)
+	if err != nil {
+		return nil, err
+	}
+
+	if project != nil {
+		conf, err := getconfig(req)
+		if err != nil {
+			fmt.Errorf("%s", err)
+		}
+		keystone_url := conf[0]
+		token := conf[1]
+
+		if err != nil {
+			return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
+		}
+
+		status, err := DeleteProject(keystone_url, token, name)
+		if err != nil {
+			fmt.Errorf("%s", err)
+		}
+
+		if status == "NO_OS_PROJECT" {
+			if err := req.Storage.Delete("project/"+name); err != nil {
+				return nil, err
+			}
+		}
+
+		if status == "" {
+			if err := req.Storage.Delete("project/"+name); err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		return logical.ErrorResponse(fmt.Sprintf("unknown project: %s", name)), nil
+	}
+
+	return &logical.Response{
+		Data: map[string]interface{}{
+			"name":    name,
+			"deleted": true,
 		},
 	}, nil
 }
