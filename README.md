@@ -180,7 +180,5 @@ Parameters:
 
 ###### TODO:
 
-- Credentials
 - Groups
 - Policies
-- Regions
