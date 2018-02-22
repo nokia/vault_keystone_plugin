@@ -2,9 +2,11 @@ package keystoneauth
 
 import (
 	"fmt"
+
 	"github.com/fatih/structs"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/parnurzeal/gorequest"
 )
 
 func pathConfig(b *backend) *framework.Path {
@@ -50,6 +52,20 @@ func (b *backend) pathConnectionWrite(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	connURL := data.Get("connection_url").(string)
 	adminAuthToken := data.Get("admin_auth_token").(string)
+
+	request := gorequest.New()
+	resp, _, errs := request.Get("http://"+connURL+"/v3/users/").
+		Set("X-Auth-Token", adminAuthToken).
+		Set("Content-type", "application/json").
+		End()
+
+		if errs != nil {
+			return nil, fmt.Errorf("", errs[0])
+		}
+		if resp.StatusCode != 200 {
+			return nil, fmt.Errorf("Can't connect to keystone, check configuration" +
+				" of `connection_url` and `admin_auth_token`")
+		}
 
 	// Store it
 	entry, err := logical.StorageEntryJSON("config/connection", connectionConfig{
