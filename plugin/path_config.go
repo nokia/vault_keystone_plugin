@@ -2,6 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/fatih/structs"
 	"github.com/hashicorp/vault/logical"
@@ -63,8 +64,10 @@ func (b *backend) pathConnectionWrite(
 			return nil, fmt.Errorf("", errs[0])
 		}
 		if resp.StatusCode != 200 {
-			return nil, fmt.Errorf("Can't connect to keystone, check configuration" +
-				" of `connection_url` and `admin_auth_token`")
+			return nil, fmt.Errorf("Can't connect to keystone, " +
+				"check configuration of `connection_url` and/or `admin_auth_token`")
+		} else {
+			log.Printf("Succesfully connected to: %s", connURL)
 		}
 
 	// Store it
