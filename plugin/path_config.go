@@ -65,7 +65,8 @@ func (b *backend) pathConnectionWrite(
 		}
 		if resp.StatusCode != 200 {
 			return nil, fmt.Errorf("Can't connect to keystone, " +
-				"check configuration of `connection_url` and/or `admin_auth_token`")
+				"check configuration options :`connection_url` and `admin_auth_token`" +
+				" or authentication permissions for OpenStack Keystone")
 		} else {
 			log.Printf("Succesfully connected to: %s", connURL)
 		}
