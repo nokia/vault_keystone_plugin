@@ -2,6 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"github.com/hashicorp/vault/plugins/helper/database/credsutil"
@@ -62,8 +63,8 @@ func pathGroupsUsers(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) Group(s logical.Storage, n string) (*groupEntry, error) {
-	entry, err := s.Get("group/" + n)
+func (b *backend) Group(ctx context.Context, s logical.Storage, n string) (*groupEntry, error) {
+	entry, err := s.Get(ctx, "group/" + n)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func (b *backend) Group(s logical.Storage, n string) (*groupEntry, error) {
 }
 
 func (b *backend) pathGroupRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	var namepostfix string
 	namepostfix, _ = credsutil.RandomAlphaNumeric(20, true)
@@ -89,7 +90,7 @@ func (b *backend) pathGroupRead(
 	description := data.Get("description").(string)
 	domain_id := data.Get("domain_id").(string)
 
-	group, err := b.Group(req.Storage, name)
+	group, err := b.Group(ctx, req.Storage, name)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +98,7 @@ func (b *backend) pathGroupRead(
 		return logical.ErrorResponse(fmt.Sprintf("unknown group: %s", name)), nil
 	}
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
@@ -127,8 +128,8 @@ func (b *backend) pathGroupRead(
 }
 
 func (b *backend) pathGroupList(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List("group/")
+	ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	entries, err := req.Storage.List(ctx, "group/")
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +138,7 @@ func (b *backend) pathGroupList(
 }
 
 func (b *backend) pathGroupWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	description := data.Get("description").(string)
@@ -157,7 +158,7 @@ func (b *backend) pathGroupWrite(
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 
@@ -170,11 +171,11 @@ func (b *backend) pathGroupWrite(
 }
 
 func (b *backend) pathGroupAddUser(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	user_id := data.Get("user_id").(string)
 	group_id := data.Get("group_id").(string)
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")

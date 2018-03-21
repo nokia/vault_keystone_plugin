@@ -2,7 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
-
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -59,8 +59,8 @@ func pathProjects(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) Project(s logical.Storage, n string) (*projectEntry, error) {
-	entry, err := s.Get("project/" + n)
+func (b *backend) Project(ctx context.Context, s logical.Storage, n string) (*projectEntry, error) {
+	entry, err := s.Get(ctx, "project/" + n)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (b *backend) Project(s logical.Storage, n string) (*projectEntry, error) {
 }
 
 func (b *backend) pathProjectRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	description := data.Get("description").(string)
@@ -86,7 +86,7 @@ func (b *backend) pathProjectRead(
 	enabled := data.Get("enabled").(bool)
 	is_domain := data.Get("is_domain").(bool)
 
-	project, err := b.Project(req.Storage, name)
+	project, err := b.Project(ctx, req.Storage, name)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (b *backend) pathProjectRead(
 		return logical.ErrorResponse(fmt.Sprintf("unknown project: %s", name)), nil
 	}
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
@@ -124,8 +124,8 @@ func (b *backend) pathProjectRead(
 }
 
 func (b *backend) pathProjectList(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List("project/")
+	ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	entries, err := req.Storage.List(ctx, "project/")
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (b *backend) pathProjectList(
 }
 
 func (b *backend) pathProjectWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	is_domain := data.Get("is_domain").(bool)
@@ -160,7 +160,7 @@ func (b *backend) pathProjectWrite(
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 
@@ -173,17 +173,17 @@ func (b *backend) pathProjectWrite(
 }
 
 func (b *backend) pathProjectDelete(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 
-	project, err := req.Storage.Get("project/"+name)
+	project, err := req.Storage.Get(ctx, "project/"+name)
 	if err != nil {
 		return nil, err
 	}
 
 	if project != nil {
-		conf, err := getconfig(req)
+		conf, err := getconfig(ctx, req)
 		if err != nil {
 			fmt.Errorf("%s", err)
 		}
@@ -200,13 +200,13 @@ func (b *backend) pathProjectDelete(
 		}
 
 		if status == "NO_OS_PROJECT" {
-			if err := req.Storage.Delete("project/"+name); err != nil {
+			if err := req.Storage.Delete(ctx, "project/"+name); err != nil {
 				return nil, err
 			}
 		}
 
 		if status == "" {
-			if err := req.Storage.Delete("project/"+name); err != nil {
+			if err := req.Storage.Delete(ctx, "project/"+name); err != nil {
 				return nil, err
 			}
 		}

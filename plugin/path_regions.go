@@ -2,7 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
-
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -41,8 +41,8 @@ func pathRegions(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) Region(s logical.Storage, n string) (*regionEntry, error) {
-	entry, err := s.Get("region/" + n)
+func (b *backend) Region(ctx context.Context, s logical.Storage, n string) (*regionEntry, error) {
+	entry, err := s.Get(ctx, "region/" + n)
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (b *backend) Region(s logical.Storage, n string) (*regionEntry, error) {
 	return &result, nil
 }
 
-func (b *backend) pathRegionRead(req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathRegionRead(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	id := data.Get("id").(string)
 	description := data.Get("description").(string)
 	parentRegionID := data.Get("parent_region_id").(string)
 
-	region, err := b.Region(req.Storage, id)
+	region, err := b.Region(ctx, req.Storage, id)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (b *backend) pathRegionRead(req *logical.Request, data *framework.FieldData
 		return logical.ErrorResponse(fmt.Sprintf("unknown region: %s", id)), nil
 	}
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
@@ -96,8 +96,8 @@ func (b *backend) pathRegionRead(req *logical.Request, data *framework.FieldData
 }
 
 func (b *backend) pathRegionList(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List("region/")
+	ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	entries, err := req.Storage.List(ctx, "region/")
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (b *backend) pathRegionList(
 }
 
 func (b *backend) pathRegionWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	id := data.Get("id").(string)
 	description := data.Get("description").(string)
@@ -122,7 +122,7 @@ func (b *backend) pathRegionWrite(
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 

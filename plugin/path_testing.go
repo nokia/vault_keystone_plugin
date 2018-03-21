@@ -1,6 +1,7 @@
 package keystoneauth
 
 import (
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -20,7 +21,7 @@ func pathTesting(b *backend) *framework.Path {
 }
 
 func (b *backend) pathTestingRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// Return the secret
 	return &logical.Response{
 		Data: map[string]interface{}{
@@ -30,7 +31,7 @@ func (b *backend) pathTestingRead(
 }
 
 func (b *backend) pathTestingCreate(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	val := data.Get("value").(string)
 
 	entry := &logical.StorageEntry{
@@ -39,7 +40,7 @@ func (b *backend) pathTestingCreate(
 	}
 
 	s := req.Storage
-	err := s.Put(entry)
+	err := s.Put(ctx, entry)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +52,6 @@ func (b *backend) pathTestingCreate(
 	}, nil
 }
 
-func (b *backend) pathTestingExistenceCheck(req *logical.Request, data *framework.FieldData) (bool, error) {
+func (b *backend) pathTestingExistenceCheck(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
 	return false, nil
 }

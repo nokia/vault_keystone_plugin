@@ -2,6 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"reflect"
@@ -38,8 +39,8 @@ func pathRoles(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) Role(s logical.Storage, n string) (*roleEntry, error) {
-	entry, err := s.Get("role/" + n)
+func (b *backend) Role(ctx context.Context, s logical.Storage, n string) (*roleEntry, error) {
+	entry, err := s.Get(ctx, "role/" + n)
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +58,12 @@ func (b *backend) Role(s logical.Storage, n string) (*roleEntry, error) {
 }
 
 func (b *backend) pathRoleRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	domain_id := data.Get("domain_id").(string)
 
-	role, err := b.Role(req.Storage, name)
+	role, err := b.Role(ctx, req.Storage, name)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +71,7 @@ func (b *backend) pathRoleRead(
 		return logical.ErrorResponse(fmt.Sprintf("unknown role: %s", name)), nil
 	}
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
 	}
@@ -201,8 +202,8 @@ func pathRolesUserOnProject(b *backend) *framework.Path {
 	}
 }
 
-func getconfig(req *logical.Request) ([]string, error) {
-	entry, err := req.Storage.Get("config/connection")
+func getconfig(ctx context.Context, req *logical.Request) ([]string, error) {
+	entry, err := req.Storage.Get(ctx, "config/connection")
 	if err != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
 	}
@@ -219,13 +220,13 @@ func getconfig(req *logical.Request) ([]string, error) {
 }
 
 func (b *backend) pathRolesGroupOnDomainWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	domain_id := data.Get("domain").(string)
 	group_id := data.Get("group").(string)
 	role_id := data.Get("role").(string)
 
-	conf, err := getconfig(req)
+	conf, err := getconfig(ctx, req)
 
 	if err != nil {
 		return nil, err
@@ -252,7 +253,7 @@ func (b *backend) pathRolesGroupOnDomainWrite(
 }
 
 func (b *backend) pathRolesGroupOnProjectWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	group_id := data.Get("group").(string)
 	project_id := data.Get("project").(string)
@@ -262,7 +263,7 @@ func (b *backend) pathRolesGroupOnProjectWrite(
 	reflect.TypeOf(project_id)
 	reflect.TypeOf(role_id)
 
-	conf, err := getconfig(req)
+	conf, err := getconfig(ctx, req)
 
 	if err != nil {
 		return nil, err
@@ -289,7 +290,7 @@ func (b *backend) pathRolesGroupOnProjectWrite(
 }
 
 func (b *backend) pathRolesUserOnDomainWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	domain_id := data.Get("domain").(string)
 	user_id := data.Get("user").(string)
@@ -299,7 +300,7 @@ func (b *backend) pathRolesUserOnDomainWrite(
 	reflect.TypeOf(user_id)
 	reflect.TypeOf(role_id)
 
-	conf, err := getconfig(req)
+	conf, err := getconfig(ctx, req)
 
 	if err != nil {
 		return nil, err
@@ -326,7 +327,7 @@ func (b *backend) pathRolesUserOnDomainWrite(
 }
 
 func (b *backend) pathRolesUserOnProjectWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	project_id := data.Get("project").(string)
 	user_id := data.Get("user").(string)
@@ -336,7 +337,7 @@ func (b *backend) pathRolesUserOnProjectWrite(
 	reflect.TypeOf(user_id)
 	reflect.TypeOf(role_id)
 
-	conf, err := getconfig(req)
+	conf, err := getconfig(ctx, req)
 
 	if err != nil {
 		return nil, err
@@ -366,7 +367,7 @@ func (b *backend) pathRolesUserOnProjectWrite(
 
 
 func (b *backend) pathRoleWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	fmt.Println(name)
@@ -378,7 +379,7 @@ func (b *backend) pathRoleWrite(
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 
@@ -391,8 +392,8 @@ func (b *backend) pathRoleWrite(
 }
 
 func (b *backend) pathRoleList(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List("role/")
+	ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	entries, err := req.Storage.List(ctx, "role/")
 	if err != nil {
 		return nil, err
 	}

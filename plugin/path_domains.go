@@ -2,6 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"github.com/hashicorp/vault/plugins/helper/database/credsutil"
@@ -43,8 +44,8 @@ func pathDomains(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) Domain(s logical.Storage, n string) (*domainEntry, error) {
-	entry, err := s.Get("domain/" + n)
+func (b *backend) Domain(ctx context.Context, s logical.Storage, n string) (*domainEntry, error) {
+	entry, err := s.Get(ctx, "domain/" + n)
 	if err != nil {
 		return nil, err
 	}
@@ -62,13 +63,13 @@ func (b *backend) Domain(s logical.Storage, n string) (*domainEntry, error) {
 }
 
 func (b *backend) pathDomainRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	description := data.Get("description").(string)
 	enabled := data.Get("enabled").(bool)
 
-	domain, err := b.Domain(req.Storage, name)
+	domain, err := b.Domain(ctx, req.Storage, name)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func (b *backend) pathDomainRead(
 		return logical.ErrorResponse(fmt.Sprintf("unknown domain: %s", name)), nil
 	}
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
 	}
@@ -105,8 +106,8 @@ func (b *backend) pathDomainRead(
 }
 
 func (b *backend) pathDomainList(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List("domain/")
+	ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	entries, err := req.Storage.List(ctx, "domain/")
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func (b *backend) pathDomainList(
 }
 
 func (b *backend) pathDomainWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	description := data.Get("description").(string)
@@ -135,7 +136,7 @@ func (b *backend) pathDomainWrite(
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 

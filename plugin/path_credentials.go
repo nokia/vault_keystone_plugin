@@ -2,6 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -35,8 +36,8 @@ func pathCredentials(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) Credential(s logical.Storage, n string) (*credentialEntry, error) {
-	entry, err := s.Get("credential/" + n)
+func (b *backend) Credential(ctx context.Context, s logical.Storage, n string) (*credentialEntry, error) {
+	entry, err := s.Get(ctx, "credential/" + n)
 	if err != nil {
 		return nil, err
 	}
@@ -54,14 +55,14 @@ func (b *backend) Credential(s logical.Storage, n string) (*credentialEntry, err
 }
 
 func (b *backend) pathCredentialRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	user_id := data.Get("user_id").(string)
 	blob := data.Get("blob").(string)
 	thetype := data.Get("type").(string)
 	project_id := data.Get("project_id").(string)
 
-	credential, err := b.Credential(req.Storage, blob)
+	credential, err := b.Credential(ctx, req.Storage, blob)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func (b *backend) pathCredentialRead(
 		return logical.ErrorResponse(fmt.Sprintf("unknown credential: %s", blob)), nil
 	}
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
 	}
@@ -94,8 +95,8 @@ func (b *backend) pathCredentialRead(
 }
 
 func (b *backend) pathCredentialList(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List("credential/")
+	ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	entries, err := req.Storage.List(ctx, "credential/")
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ func (b *backend) pathCredentialList(
 }
 
 func (b *backend) pathCredentialWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	user_id := data.Get("user_id").(string)
 	blob := data.Get("blob").(string)
@@ -126,7 +127,7 @@ func (b *backend) pathCredentialWrite(
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 

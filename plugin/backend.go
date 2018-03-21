@@ -3,6 +3,7 @@ package keystoneauth
 import (
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"context"
 )
 
 // New returns a new backend as an interface. This func
@@ -12,9 +13,9 @@ func New() (interface{}, error) {
 }
 
 // Factory returns a new backend as logical.Backend.
-func Factory(conf *logical.BackendConfig) (logical.Backend, error) {
+func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
 	b := Backend()
-	if err := b.Setup(conf); err != nil {
+	if err := b.Setup(ctx, conf); err != nil {
 		return nil, err
 	}
 	return b, nil
@@ -25,8 +26,9 @@ func Factory(conf *logical.BackendConfig) (logical.Backend, error) {
 func FactoryType(backendType logical.BackendType) func(*logical.BackendConfig) (logical.Backend, error) {
 	return func(conf *logical.BackendConfig) (logical.Backend, error) {
 		b := Backend()
+		ctx := context.Background()
 		b.BackendType = backendType
-		if err := b.Setup(conf); err != nil {
+		if err := b.Setup(ctx, conf); err != nil {
 			return nil, err
 		}
 		return b, nil
@@ -80,7 +82,7 @@ type backend struct {
 	internal string
 }
 
-func (b *backend) invalidate(key string) {
+func (b *backend) invalidate(ctx context.Context, key string) {
 	switch key {
 	case "internal":
 		b.internal = ""
