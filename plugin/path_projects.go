@@ -2,7 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
-
+	"log"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -50,6 +50,10 @@ func pathProjects(b *backend) *framework.Path {
 				Description: "parent_id",
 				Default:     "",
 			},
+			"properties":		&framework.FieldSchema{
+				Type:					framework.TypeCommaStringSlice,
+				Description:	"properties",
+			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.UpdateOperation: 	b.pathProjectWrite,
@@ -80,11 +84,12 @@ func (b *backend) Project(s logical.Storage, n string) (*projectEntry, error) {
 func (b *backend) pathProjectRead(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
-	name := data.Get("name").(string)
-	description := data.Get("description").(string)
-	domain_id := data.Get("domain_id").(string)
-	enabled := data.Get("enabled").(bool)
-	is_domain := data.Get("is_domain").(bool)
+	name 				:=	data.Get("name").(string)
+	description := 	data.Get("description").(string)
+	domain_id 	:= 	data.Get("domain_id").(string)
+	enabled 		:= 	data.Get("enabled").(bool)
+	is_domain 	:=	data.Get("is_domain").(bool)
+	properties 	:=	data.Get("properties").([]string)
 
 	project, err := b.Project(req.Storage, name)
 	if err != nil {
@@ -102,7 +107,13 @@ func (b *backend) pathProjectRead(
 
 	keystone_url := conf[0]
 	token := conf[1]
-	created_project, err2 := CreateProject(name, description, domain_id, enabled, is_domain, token, keystone_url)
+
+	// data unreadable at this point
+	log.Printf("pathProjectRead %+v", data.Get("properties").([]string))
+
+
+	created_project, err2 := CreateProject(name, description, domain_id,
+		enabled, is_domain, token, properties, keystone_url)
 
 	if err2 != nil {
 		return nil, fmt.Errorf("creation of the project failed")
@@ -118,6 +129,7 @@ func (b *backend) pathProjectRead(
 			"description": project.Project_description,
 			"enabled":     project.Project_enabled,
 			"parent_id":   project.Project_parent_id,
+			"properties":	 project.Project_properties,
 			"id":          created_project_id,
 		},
 	}, nil
@@ -142,24 +154,23 @@ func (b *backend) pathProjectWrite(
 	description := data.Get("description").(string)
 	enabled := data.Get("enabled").(bool)
 	parent_id := data.Get("parent_id").(string)
+	properties := data.Get("properties").([]string)
 
 	// Store it
 	entry, err := logical.StorageEntryJSON("project/"+name, &projectEntry{
-		Project_name:        name,
-		Project_is_domain:   is_domain,
-		Project_domain_id:   domain_id,
-		Project_description: description,
-		Project_enabled:     enabled,
-		Project_parent_id:   parent_id,
+		Project_name:       	name,
+		Project_is_domain:   	is_domain,
+		Project_domain_id:   	domain_id,
+		Project_description: 	description,
+		Project_enabled:     	enabled,
+		Project_parent_id:   	parent_id,
+		Project_properties:		properties,
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	if err := req.Storage.Put(entry); err != nil {
 		return nil, err
 	}
@@ -229,4 +240,5 @@ type projectEntry struct {
 	Project_description string `json:"description" structs:"description" mapstructure:"description"`
 	Project_enabled     bool   `json:"enabled" structs:"enabled" mapstructure:"enabled"`
 	Project_parent_id   string `json:"parent_id" structs:"parent_id" mapstructure:"parent_id"`
+  Project_properties  []string `json:"properties" structs:"properties" mapstructure:"properties"`
 }

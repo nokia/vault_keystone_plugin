@@ -21,6 +21,7 @@ type Project struct {
 	Id          string
 	Domain_id   string
 	Name        string
+	Properties	[]string
 }
 
 type LinksProject struct {
@@ -35,14 +36,17 @@ type ProjectResponse struct {
 }
 
 
-func CreateProject(name string, description string, domain_id string, enabled bool, is_domain bool, token string, keystone_url string) ([]string, error) {
+func CreateProject(
+	name string, description string, domain_id string, enabled bool,
+	is_domain bool, token string, properties []string,
+	keystone_url string) ([]string, error) {
+
 	var create_reponse Create_reponse_struct_project
 
 	request := gorequest.New()
 
 	internal_map := map[string]interface{}{"name":name}
 	template_map := map[string]map[string]interface{}{"project":internal_map}
-
 	if description != "" {
 		template_map["project"]["description"] = description
 	}
@@ -54,6 +58,10 @@ func CreateProject(name string, description string, domain_id string, enabled bo
 	}
 	if is_domain != false {
 		template_map["project"]["enabled"] = true
+	}
+
+	if properties != nil {
+		log.Printf("CreteProject\n")
 	}
 
 	var body2 []byte
@@ -91,7 +99,6 @@ func DeleteProject(
 	var data string
 	var err []error
 	var status string
-	// var to_delete_project string
 
 	request := gorequest.New()
 	_, data, err = request.Get("http://" + keystone_url + "/v3/projects/").
