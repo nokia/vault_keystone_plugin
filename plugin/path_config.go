@@ -2,6 +2,7 @@ package keystoneauth
 
 import (
 	"fmt"
+	"context"
 	"github.com/fatih/structs"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
@@ -28,8 +29,8 @@ func pathConfig(b *backend) *framework.Path {
 }
 
 func (b *backend) pathConnectionRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	entry, err := req.Storage.Get("config/connection")
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	entry, err := req.Storage.Get(ctx, "config/connection")
 	if err != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
 	}
@@ -47,7 +48,7 @@ func (b *backend) pathConnectionRead(
 }
 
 func (b *backend) pathConnectionWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	connURL := data.Get("connection_url").(string)
 	adminAuthToken := data.Get("admin_auth_token").(string)
 
@@ -61,7 +62,7 @@ func (b *backend) pathConnectionWrite(
 		return nil, err
 	}
 
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 

@@ -1,6 +1,7 @@
 package keystoneauth
 
 import (
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -17,7 +18,7 @@ func pathInternal(b *backend) *framework.Path {
 }
 
 func (b *backend) pathTestingReadInternal(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	// Return the secret
 	return &logical.Response{
 		Data: map[string]interface{}{

@@ -3,7 +3,7 @@ package keystoneauth
 import (
 	"fmt"
 	"log"
-
+	"context"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"github.com/hashicorp/vault/plugins/helper/database/credsutil"
@@ -84,8 +84,8 @@ func pathUsersEC2(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) User(s logical.Storage, n string) (*userEntry, error) {
-	entry, err := s.Get("user/" + n)
+func (b *backend) User(ctx context.Context, s logical.Storage, n string) (*userEntry, error) {
+	entry, err := s.Get(ctx, "user/" + n)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (b *backend) User(s logical.Storage, n string) (*userEntry, error) {
 }
 
 func (b *backend) pathUserRead(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	var namepostfix string
 	default_project_id := data.Get("default_project_id").(string)
@@ -113,7 +113,7 @@ func (b *backend) pathUserRead(
 	domain_id := data.Get("domain_id").(string)
 	enabled := data.Get("enabled").(bool)
 
-	user, err := b.User(req.Storage, name)
+	user, err := b.User(ctx, req.Storage, name)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (b *backend) pathUserRead(
 		return logical.ErrorResponse(fmt.Sprintf("unknown user: %s", name)), nil
 	}
 
-	conf, err2 := getconfig(req)
+	conf, err2 := getconfig(ctx, req)
 
 	if err2 != nil {
 		return nil, fmt.Errorf("configure the Keystone connection with config/connection first")
@@ -155,8 +155,8 @@ func (b *backend) pathUserRead(
 }
 
 func (b *backend) pathUserList(
-	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	entries, err := req.Storage.List("user/")
+	ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	entries, err := req.Storage.List(ctx, "user/")
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (b *backend) pathUserList(
 }
 
 func (b *backend) pathUserWrite(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	name := data.Get("name").(string)
 	default_project_id := data.Get("default_project_id").(string)
@@ -185,7 +185,7 @@ func (b *backend) pathUserWrite(
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(entry); err != nil {
+	if err := req.Storage.Put(ctx, entry); err != nil {
 		return nil, err
 	}
 
@@ -198,9 +198,9 @@ func (b *backend) pathUserWrite(
 }
 
 func (b *backend) pathUserDelete(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
-	conf, err := getconfig(req)
+	conf, err := getconfig(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func (b *backend) pathUserDelete(
 	var deleted_entity bool
 
   // Check if user exist in Storage
-	user, err := req.Storage.Get("user/" + name)
+	user, err := req.Storage.Get(ctx, "user/" + name)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (b *backend) pathUserDelete(
     // User deleted from OpenStack but exists in Storage
 		if v, present := x["NO_OS_USER"]; present {
 			fmt.Sprintf("%v", v)
-			err_storage := req.Storage.Delete("user/" + name)
+			err_storage := req.Storage.Delete(ctx, "user/" + name)
 			if err_storage != nil {
 				return logical.ErrorResponse(
 					fmt.Sprintf("User not deleted from vault: %s", err_storage)), nil
@@ -255,7 +255,7 @@ func (b *backend) pathUserDelete(
 					}
 			}
 
-			err_storage := req.Storage.Delete("user/" + name)
+			err_storage := req.Storage.Delete(ctx, "user/" + name)
 			if err_storage != nil {
 				return logical.ErrorResponse(
 					fmt.Sprintf("User not deleted from vault: %s", err_storage)), nil
@@ -276,12 +276,12 @@ func (b *backend) pathUserDelete(
 }
 
 func (b *backend) pathUserEC2Write(
-	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 
 	id := data.Get("user_id").(string)
 	tenant_id := data.Get("tenant_id").(string)
 
-	conf, err := getconfig(req)
+	conf, err := getconfig(ctx, req)
 
 	if err != nil {
 		return nil, err
